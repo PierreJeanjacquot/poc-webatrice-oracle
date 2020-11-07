@@ -1,6 +1,10 @@
 import React from "react";
 import * as images from "../services/images";
 
+export type ImageContextType = {
+  getImage: (uuid: string) => Promise<string | undefined>;
+};
+
 async function getImage(uuid: string): Promise<string | undefined> {
   try {
     const fromDB = await images.getCardImage(uuid);
@@ -13,7 +17,7 @@ async function getImage(uuid: string): Promise<string | undefined> {
   }
 }
 
-export const ImageContext = React.createContext({
+export const ImageContext = React.createContext<ImageContextType>({
   getImage
 });
 

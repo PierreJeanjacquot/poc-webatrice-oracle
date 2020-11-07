@@ -3,14 +3,27 @@ import { OracleContext } from "./OracleProvider";
 import CardImage from "./CardImage";
 
 function CardList(): JSX.Element {
-  const { cards, loadDB, update } = useContext(OracleContext);
+  const {
+    isUpdating,
+    cardCount,
+    updateOracle,
+    updateSetsInfo,
+    cards,
+    loadDB,
+    updateSet
+  } = useContext(OracleContext);
   const [selected, setSelected] = useState("");
   return (
     <div>
-      <div>
-        <button onClick={loadDB}>load</button>
-        <button onClick={update}>update</button>
-      </div>
+      <strong>card count: {cardCount}</strong>
+      {!isUpdating && (
+        <div>
+          <button onClick={updateOracle}>update oracle</button>
+          <button onClick={updateSetsInfo}>update sets info</button>
+          <button onClick={loadDB}>load</button>
+          <button onClick={() => updateSet("PLIST")}>update set PLIST</button>
+        </div>
+      )}
       {selected && (
         <div>
           <CardImage uuid={selected} />
