@@ -1,8 +1,9 @@
 import React, { useRef, useState, useEffect, useContext } from "react";
 import { ImageContext } from "./ImageProvider";
+import { CardInfo } from "../types/stores";
 
 interface CardImageProps {
-  uuid: string;
+  cardInfo: CardInfo;
 }
 
 function CardImage(props: CardImageProps): JSX.Element {
@@ -13,17 +14,17 @@ function CardImage(props: CardImageProps): JSX.Element {
     };
   }, []);
   const [src, setSrc] = useState("");
-  const { uuid } = props;
+  const { cardInfo } = props;
   const { getImage } = useContext(ImageContext);
   useEffect(() => {
     (async function() {
       setSrc("");
-      const imgSrc = await getImage(uuid);
+      const imgSrc = await getImage(cardInfo.identifiers.scryfallId);
       if (imgSrc && isMounted.current) {
         setSrc(imgSrc);
       }
     })();
-  }, [uuid, getImage]);
+  }, [cardInfo.identifiers.scryfallId, getImage]);
   return <>{src && <img src={src} alt="card" />}</>;
 }
 

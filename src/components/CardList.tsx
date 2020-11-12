@@ -6,7 +6,7 @@ function CardList(
   props: { cards: Array<CardInfo> } = { cards: [] }
 ): JSX.Element {
   const { cards } = props;
-  const [selected, setSelected] = useState("");
+  const [selected, setSelected] = useState(undefined as CardInfo | undefined);
   return (
     <div>
       <div style={{ float: "left", maxHeight: "600px", overflowY: "scroll" }}>
@@ -14,7 +14,7 @@ function CardList(
           return (
             <div
               key={i}
-              onClick={() => setSelected(card.identifiers.scryfallId)}
+              onClick={() => setSelected(card)}
               style={{ cursor: "pointer" }}
             >
               {card.name}
@@ -24,7 +24,7 @@ function CardList(
       </div>
       {selected && (
         <div style={{ float: "left", maxHeight: "500px" }}>
-          <CardImage uuid={selected} />
+          <CardImage cardInfo={selected} />
         </div>
       )}
     </div>
