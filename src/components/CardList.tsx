@@ -1,46 +1,32 @@
-import React, { useContext, useState } from "react";
-import { OracleContext } from "./OracleProvider";
+import React, { useState } from "react";
 import CardImage from "./CardImage";
+import { CardInfo } from "../types/stores";
 
-function CardList(): JSX.Element {
-  const {
-    isUpdating,
-    cardCount,
-    updateOracle,
-    updateSetsInfo,
-    cards,
-    loadDB,
-    updateSet
-  } = useContext(OracleContext);
+function CardList(
+  props: { cards: Array<CardInfo> } = { cards: [] }
+): JSX.Element {
+  const { cards } = props;
   const [selected, setSelected] = useState("");
   return (
     <div>
-      <strong>card count: {cardCount}</strong>
-      {!isUpdating && (
-        <div>
-          <button onClick={updateOracle}>update oracle</button>
-          <button onClick={updateSetsInfo}>update sets info</button>
-          <button onClick={loadDB}>load</button>
-          <button onClick={() => updateSet("PLIST")}>update set PLIST</button>
-        </div>
-      )}
-      {selected && (
-        <div>
-          <CardImage uuid={selected} />
-        </div>
-      )}
-      <div>
+      <div style={{ float: "left", maxHeight: "600px", overflowY: "scroll" }}>
         {cards.map((card, i) => {
           return (
             <div
               key={i}
               onClick={() => setSelected(card.identifiers.scryfallId)}
+              style={{ cursor: "pointer" }}
             >
               {card.name}
             </div>
           );
         })}
       </div>
+      {selected && (
+        <div style={{ float: "left", maxHeight: "500px" }}>
+          <CardImage uuid={selected} />
+        </div>
+      )}
     </div>
   );
 }

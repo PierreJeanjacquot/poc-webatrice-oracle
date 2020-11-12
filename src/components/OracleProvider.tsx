@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import * as oracle from "../services/oracle";
 import { SetInfo, CardInfo } from "../types/stores";
 
@@ -10,8 +10,11 @@ export type OracleContextType = {
   loadSetsInfo: () => Promise<Array<SetInfo>>;
   checkSetIsUpToDate: (setCode: string) => Promise<boolean>;
   updateSet: (setCode: string) => Promise<void>;
-  loadDB: () => Promise<void>;
-  cards: Array<CardInfo>;
+  searchCards: (criterion: {
+    name: string;
+    set?: string;
+  }) => Promise<Array<CardInfo>>;
+  getAllCards: () => Promise<Array<CardInfo>>;
 };
 
 export const OracleContext = React.createContext<OracleContextType>(
@@ -23,6 +26,13 @@ interface ProviderProps {
 }
 
 function OracleProvider(props: ProviderProps) {
+  const isMounted = useRef(true);
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
   const [isUpdating, setIsUpdating] = useState(false);
   const [cardCount, setCardCount] = useState(0);
 
@@ -35,18 +45,20 @@ function OracleProvider(props: ProviderProps) {
   const [isSetsListUpToDate, setIsSetsListUpToDate] = useState(false);
   const [isSetsListUpdating, setIsSetsListUpdating] = useState(false);
 
-  const [cards, setCards] = useState([] as Array<CardInfo>);
-
   async function updateSetsInfo(): Promise<void> {
     if (!isSetsListUpToDate && !isSetsListUpdating) {
       try {
         setIsSetsListUpdating(true);
         await oracle.updateSetsInfo();
-        setIsSetsListUpToDate(true);
-        setIsSetsListUpdating(false);
+        if (isMounted.current) {
+          setIsSetsListUpToDate(true);
+        }
       } catch (e) {
         console.log("oracle updateSetsInfo fail", e);
-        setIsSetsListUpdating(false);
+      } finally {
+        if (isMounted.current) {
+          setIsSetsListUpdating(false);
+        }
       }
     }
   }
@@ -71,24 +83,30 @@ function OracleProvider(props: ProviderProps) {
         }
       })
     );
-    setIsUpdating(false);
-    setCardCount(await oracle.countCards());
+    const newCardCount = await oracle.countCards();
+    if (isMounted.current) {
+      setIsUpdating(false);
+      setCardCount(newCardCount);
+    }
   }
 
   async function loadSetsInfo(): Promise<Array<SetInfo>> {
-    return (await oracle.getAllSetsInfo()) || [];
+    return oracle.getAllSetsInfo();
   }
 
   async function checkSetIsUpToDate(setCode: string): Promise<boolean> {
-    return await oracle.checkSetIsUpToDate(setCode);
+    return oracle.checkSetIsUpToDate(setCode);
   }
 
-  async function loadDB(): Promise<void> {
-    try {
-      setCards(await oracle.getAllCards());
-    } catch (e) {
-      console.log("loadDB cards fail", e);
-    }
+  async function searchCards(criterion: {
+    name: string;
+    set?: string;
+  }): Promise<Array<CardInfo>> {
+    return oracle.searchCards(criterion);
+  }
+
+  async function getAllCards(): Promise<Array<CardInfo>> {
+    return oracle.getAllCards();
   }
 
   return (
@@ -98,11 +116,11 @@ function OracleProvider(props: ProviderProps) {
         cardCount,
         updateOracle,
         updateSetsInfo,
-        cards,
         updateSet,
-        loadDB,
         loadSetsInfo,
-        checkSetIsUpToDate
+        checkSetIsUpToDate,
+        searchCards,
+        getAllCards
       }}
     >
       {props.children}

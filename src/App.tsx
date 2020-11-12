@@ -1,14 +1,17 @@
 import React from "react";
 
+import StorageStatus from "./components/StorageStatus";
 import OracleProvider from "./components/OracleProvider";
-import Sets from "./components/Sets";
-import CardList from "./components/CardList";
+import OracleStatus from "./components/OracleStatus";
+import CardSearch from "./components/CardSearch";
 
 function App() {
   return (
     <div>
       <OracleProvider>
-        <CardList />
+        <StorageStatus />
+        <OracleStatus />
+        <CardSearch />
       </OracleProvider>
     </div>
   );

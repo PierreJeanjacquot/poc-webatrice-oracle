@@ -19,18 +19,22 @@ function arrayBufferToBlob(buffer: ArrayBuffer, type: string): Blob {
   return new Blob([buffer], { type: type });
 }
 
-export async function fetchImage(uuid: string): Promise<void> {
-  const res = await fetch(`${IMAGE_API}${uuid}?format=image&version=normal`);
+export async function fetchImage(scryfallId: string): Promise<void> {
+  const res = await fetch(
+    `${IMAGE_API}${scryfallId}?format=image&version=normal`
+  );
   if (!res.ok) {
     throw new Error(`bad response: ${res.status}`);
   }
   const blob = await res.blob();
   const buffer = await blobToArrayBuffer(blob);
-  await db.insertImage({ uuid, normal: buffer });
+  await db.insertImage({ scryfallId, normal: buffer });
 }
 
-export async function getCardImage(uuid: string): Promise<string | undefined> {
-  const cardImage = await db.getImage(uuid);
+export async function getCardImage(
+  scryfallId: string
+): Promise<string | undefined> {
+  const cardImage = await db.getImage(scryfallId);
   if (!cardImage) return undefined;
   const blob = arrayBufferToBlob(cardImage.normal, "image/jpeg");
   const src = URL.createObjectURL(blob);

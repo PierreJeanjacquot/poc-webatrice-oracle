@@ -2,15 +2,15 @@ import React from "react";
 import * as images from "../services/images";
 
 export type ImageContextType = {
-  getImage: (uuid: string) => Promise<string | undefined>;
+  getImage: (scryfallId: string) => Promise<string | undefined>;
 };
 
-async function getImage(uuid: string): Promise<string | undefined> {
+async function getImage(scryfallId: string): Promise<string | undefined> {
   try {
-    const fromDB = await images.getCardImage(uuid);
+    const fromDB = await images.getCardImage(scryfallId);
     if (fromDB) return fromDB;
-    await images.fetchImage(uuid);
-    const fetched = await images.getCardImage(uuid);
+    await images.fetchImage(scryfallId);
+    const fetched = await images.getCardImage(scryfallId);
     return fetched;
   } catch (e) {
     return undefined;

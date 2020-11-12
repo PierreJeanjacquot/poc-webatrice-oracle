@@ -11,7 +11,6 @@ export async function updateSetsInfo(): Promise<void> {
     throw new Error(`bad response: ${res.status}`);
   }
   const { data } = await res.json();
-  console.log({ data });
   await db.insertManySets(data);
 }
 
@@ -51,12 +50,12 @@ export async function updateSet(setCode: string): Promise<void> {
     console.log(`failed to fetch ${ORACLE_API}/${setCode}.json`);
     throw e;
   });
-  const checksumRes = await fetch(`${ORACLE_API}/${setCode}.json.sha256`, {
-    redirect: "follow"
-  }).catch(e => {
-    console.log(`failed to fetch ${ORACLE_API}/${setCode}.json.sha256`);
-    throw e;
-  });
+  const checksumRes = await fetch(`${ORACLE_API}/${setCode}.json.sha256`).catch(
+    e => {
+      console.log(`failed to fetch ${ORACLE_API}/${setCode}.json.sha256`);
+      throw e;
+    }
+  );
   if (!res.ok) {
     throw new Error(`bad response: ${res.status}`);
   }
@@ -65,8 +64,6 @@ export async function updateSet(setCode: string): Promise<void> {
   }
   const { data } = await res.json();
   const checksum = await checksumRes.text();
-  console.log("checksum", checksum);
-  console.log({ data });
   await db.insertManyCards(data.cards);
   await db.updateSetChecksum(setCode, checksum);
 }
@@ -78,4 +75,11 @@ export async function countCards(): Promise<number> {
 
 export async function getAllCards(): Promise<Array<CardInfo>> {
   return db.getAllCards();
+}
+
+export async function searchCards(criterion: {
+  name: string;
+  set?: string;
+}): Promise<Array<CardInfo>> {
+  return db.searchCards(criterion.name, criterion.set);
 }

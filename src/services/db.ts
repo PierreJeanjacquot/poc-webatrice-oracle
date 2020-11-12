@@ -1,6 +1,6 @@
-import { DBSchema, IDBPDatabase } from "idb";
-import { openDB } from "idb/with-async-ittr.js"; // not supported by Edge
+import { openDB, DBSchema, IDBPDatabase } from "idb";
 import { SetInfo, CardInfo, CardImage } from "../types/stores";
+import * as cardUtils from "../utils/card-utils";
 
 const DB_NAME = "oracle";
 const DB_VERSION = 1;
@@ -25,6 +25,7 @@ interface OracleDB extends DBSchema {
     indexes: {
       byName: string;
       bySetCode: string;
+      bySimpleName: string;
     };
   };
   [IMAGE_STORE_NAME]: {
@@ -33,7 +34,7 @@ interface OracleDB extends DBSchema {
   };
 }
 
-async function getDB(): Promise<IDBPDatabase<OracleDB>> {
+export async function getDB(): Promise<IDBPDatabase<OracleDB>> {
   const db = await openDB<OracleDB>(DB_NAME, DB_VERSION, {
     upgrade(db) {
       const setStore = db.createObjectStore(SET_STORE_NAME, {
@@ -44,9 +45,10 @@ async function getDB(): Promise<IDBPDatabase<OracleDB>> {
         keyPath: "uuid"
       });
       cardStore.createIndex("byName", "name");
+      cardStore.createIndex("bySimpleName", "simpleName");
       cardStore.createIndex("bySetCode", "setCode");
       db.createObjectStore(IMAGE_STORE_NAME, {
-        keyPath: "uuid"
+        keyPath: "scryfallId"
       });
     }
   });
@@ -114,19 +116,14 @@ export async function insertManyCards(cards: Array<CardInfo>): Promise<void> {
   const db = await getDB();
   const tx = db.transaction(CARD_STORE_NAME, "readwrite");
   const cardStore = tx.objectStore(CARD_STORE_NAME);
-  await Promise.all(cards.map(card => cardStore.put(card)));
+  await Promise.all(
+    cards.map(card =>
+      cardStore.put({ ...card, simpleName: cardUtils.simplifyName(card.name) })
+    )
+  );
   await tx.done;
   console.log(`added ${cards.length} cards`);
 }
-
-// export async function getAllCards(): Promise<Array<CardInfo>> {
-//   const db = await getDB();
-//   const cardStore = db
-//     .transaction(CARD_STORE_NAME)
-//     .objectStore(CARD_STORE_NAME);
-//   const cards = await cardStore.index("byName").getAll();
-//   return cards;
-// }
 
 export async function getAllCards(): Promise<Array<CardInfo>> {
   const cards = [];
@@ -135,11 +132,15 @@ export async function getAllCards(): Promise<Array<CardInfo>> {
     .transaction(CARD_STORE_NAME)
     .objectStore(CARD_STORE_NAME);
   const nameIndex = cardStore.index("byName");
-  for await (const cursor of nameIndex.iterate()) {
+
+  let cursor = await nameIndex.openCursor();
+
+  while (cursor) {
     if (cursor.value) {
       cards.push(cursor.value);
       if (cards.length === PAGE_LENGTH) return cards;
     }
+    cursor = await cursor.continue();
   }
   return cards;
 }
@@ -163,17 +164,54 @@ export async function getCardByName(
     .objectStore(CARD_STORE_NAME);
   const nameIndex = cardStore.index("byName");
 
+  let cursor = await nameIndex.openCursor(name);
+
   if (!setCode) {
-    const cursor = await nameIndex.openCursor(name);
     return (cursor && cursor.value) || null;
   } else {
-    for await (const cursor of nameIndex.iterate(name)) {
+    while (cursor) {
       if (cursor.value && cursor.value.setCode === setCode) {
         return cursor.value;
       }
+      cursor = await cursor.continue();
     }
   }
   return null;
+}
+
+export async function searchCards(
+  name: string,
+  setCode?: string
+): Promise<Array<CardInfo>> {
+  const simpleName = cardUtils.simplifyName(name);
+  if (simpleName.length < 3) return [];
+
+  const db = await getDB();
+
+  const lowerBound = simpleName;
+  const upperBound = simpleName + "\uffff";
+
+  const nameRange = IDBKeyRange.bound(lowerBound, upperBound, false, false);
+  const cardStore = db
+    .transaction(CARD_STORE_NAME)
+    .objectStore(CARD_STORE_NAME);
+  const nameIndex = cardStore.index("bySimpleName");
+
+  const result = [];
+  let cursor = await nameIndex.openCursor(nameRange);
+  while (cursor) {
+    if (cursor.value) {
+      if (!setCode) {
+        result.push(cursor.value);
+      }
+      if (setCode && cursor.value.setCode === setCode) {
+        result.push(cursor.value);
+      }
+      if (result.length === PAGE_LENGTH) return result;
+    }
+    cursor = await cursor.continue();
+  }
+  return result;
 }
 
 export async function insertImage(image: CardImage): Promise<void> {
@@ -182,14 +220,22 @@ export async function insertImage(image: CardImage): Promise<void> {
   const imageStore = tx.objectStore(IMAGE_STORE_NAME);
   await imageStore.put(image);
   await tx.done;
-  console.log(`added ${image.uuid} image`);
+  console.log(`added ${image.scryfallId} image`);
 }
 
-export async function getImage(uuid: string): Promise<CardImage | null> {
+export async function getImage(scryfallId: string): Promise<CardImage | null> {
   const db = await getDB();
   const imageStore = db
     .transaction(IMAGE_STORE_NAME)
     .objectStore(IMAGE_STORE_NAME);
-  const cardImage = (await imageStore.get(uuid)) || null;
+  const cardImage = (await imageStore.get(scryfallId)) || null;
   return cardImage;
+}
+
+export async function countImages(): Promise<number> {
+  const db = await getDB();
+  const imageStore = db
+    .transaction(IMAGE_STORE_NAME)
+    .objectStore(IMAGE_STORE_NAME);
+  return imageStore.count();
 }
