@@ -40,3 +40,7 @@ export async function getCardImage(
   const src = URL.createObjectURL(blob);
   return src;
 }
+
+export async function countImages(): Promise<number> {
+  return db.countImages();
+}

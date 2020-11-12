@@ -14,7 +14,7 @@ function CardList(
           return (
             <div
               key={i}
-              onClick={() => setSelected(card)}
+              onMouseEnter={() => setSelected(card)}
               style={{ cursor: "pointer" }}
             >
               {card.name}
