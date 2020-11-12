@@ -26,6 +26,17 @@ function ImageProvider(props: ProviderProps) {
 
   const [imageCount, setImageCount] = useState(0);
 
+  useEffect(() => {
+    images
+      .countImages()
+      .then(newImageCount => {
+        if (isMounted.current) {
+          setImageCount(newImageCount);
+        }
+      })
+      .catch(e => console.log("failed to update imageCount", e));
+  });
+
   async function getImage(scryfallId: string): Promise<string | undefined> {
     try {
       const fromDB = await images.getCardImage(scryfallId);
