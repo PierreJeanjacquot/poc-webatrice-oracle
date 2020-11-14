@@ -19,12 +19,12 @@ function CardImage(props: CardImageProps): JSX.Element {
   useEffect(() => {
     (async function() {
       setSrc("");
-      const imgSrc = await getImage(cardInfo.identifiers.scryfallId);
+      const imgSrc = await getImage(cardInfo.uuid);
       if (imgSrc && isMounted.current) {
         setSrc(imgSrc);
       }
     })();
-  }, [cardInfo.identifiers.scryfallId, getImage]);
+  }, [cardInfo.uuid, getImage]);
   return <>{src && <img src={src} alt="card" />}</>;
 }
 

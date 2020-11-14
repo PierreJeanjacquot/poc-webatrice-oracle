@@ -48,7 +48,7 @@ export async function getDB(): Promise<IDBPDatabase<OracleDB>> {
       cardStore.createIndex("bySimpleName", "simpleName");
       cardStore.createIndex("bySetCode", "setCode");
       db.createObjectStore(IMAGE_STORE_NAME, {
-        keyPath: "scryfallId"
+        keyPath: "uuid"
       });
     }
   });
@@ -118,7 +118,7 @@ export async function insertManyCards(cards: Array<CardInfo>): Promise<void> {
   const cardStore = tx.objectStore(CARD_STORE_NAME);
   await Promise.all(
     cards.map(card =>
-      cardStore.put({ ...card, simpleName: cardUtils.simplifyName(card.name) })
+      cardStore.put(card)
     )
   );
   await tx.done;
@@ -220,15 +220,15 @@ export async function insertImage(image: CardImage): Promise<void> {
   const imageStore = tx.objectStore(IMAGE_STORE_NAME);
   await imageStore.put(image);
   await tx.done;
-  console.log(`added ${image.scryfallId} image`);
+  console.log(`added ${image.uuid} image`);
 }
 
-export async function getImage(scryfallId: string): Promise<CardImage | null> {
+export async function getImage(uuid: string): Promise<CardImage | null> {
   const db = await getDB();
   const imageStore = db
     .transaction(IMAGE_STORE_NAME)
     .objectStore(IMAGE_STORE_NAME);
-  const cardImage = (await imageStore.get(scryfallId)) || null;
+  const cardImage = (await imageStore.get(uuid)) || null;
   return cardImage;
 }
 

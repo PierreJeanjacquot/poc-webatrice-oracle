@@ -1,9 +1,24 @@
 import fetch from "cross-fetch";
 import * as db from "./db";
+import * as cardUtils from "../utils/card-utils"
 import { SetInfo, CardInfo } from "../types/stores";
 
 const ORACLE_API = "https://mtgjson.com/api/v5";
 const SETS_ENDPOINT = "/SetList.json";
+
+type MtgjsonCard = {
+   name: string;
+   setCode: string;
+   identifiers :{
+    scryfallId: string,
+    multiverseId?: string
+  };
+}
+
+export function formatCardForDb(card: MtgjsonCard ): CardInfo {
+  // todo complete DB format
+  return ({ ...card, simpleName: cardUtils.simplifyName(card.name), uuid: card.identifiers.scryfallId, muid: card.identifiers.multiverseId})
+}
 
 export async function updateSetsInfo(): Promise<void> {
   const res = await fetch(`${ORACLE_API}${SETS_ENDPOINT}`);
@@ -63,8 +78,10 @@ export async function updateSet(setCode: string): Promise<void> {
     throw new Error(`bad response: ${checksumRes.status}`);
   }
   const { data } = await res.json();
+  const cards = data.cards as Array<MtgjsonCard>
   const checksum = await checksumRes.text();
-  await db.insertManyCards(data.cards);
+  const formatedCards = cards.map(card => formatCardForDb(card))
+  await db.insertManyCards(formatedCards);
   await db.updateSetChecksum(setCode, checksum);
 }
 

@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from "react";
 import * as images from "../services/images";
 
 export type ImageContextType = {
-  getImage: (scryfallId: string) => Promise<string | undefined>;
+  getImage: (uuid: string) => Promise<string | undefined>;
   imageCount: number;
 };
 
@@ -37,15 +37,15 @@ function ImageProvider(props: ProviderProps) {
       .catch(e => console.log("failed to update imageCount", e));
   });
 
-  async function getImage(scryfallId: string): Promise<string | undefined> {
+  async function getImage(uuid: string): Promise<string | undefined> {
     try {
-      const fromDB = await images.getCardImage(scryfallId);
+      const fromDB = await images.getCardImage(uuid);
       if (fromDB) return fromDB;
-      if (fetchPromises.get(scryfallId) === undefined) {
+      if (fetchPromises.get(uuid) === undefined) {
         console.log("new fetch Promise");
-        fetchPromises.set(scryfallId, images.fetchImage(scryfallId));
-        await fetchPromises.get(scryfallId);
-        fetchPromises.delete(scryfallId);
+        fetchPromises.set(uuid, images.fetchImage(uuid));
+        await fetchPromises.get(uuid);
+        fetchPromises.delete(uuid);
         // non blocking update imageCount
         images
           .countImages()
@@ -57,9 +57,9 @@ function ImageProvider(props: ProviderProps) {
           .catch(e => console.log("failed to update imageCount", e));
       } else {
         console.log("waiting existing Promise");
-        await fetchPromises.get(scryfallId);
+        await fetchPromises.get(uuid);
       }
-      const fetched = await images.getCardImage(scryfallId);
+      const fetched = await images.getCardImage(uuid);
       return fetched;
     } catch (e) {
       return undefined;

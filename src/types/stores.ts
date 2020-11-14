@@ -14,22 +14,18 @@ export interface SetInfo {
 }
 
 export interface CardInfo {
-  // mtgjson uuid
+  // scryfall uuid
   uuid: string;
+  muid?: string;
   // name used as id in cockatrice model
   name: string;
   // simpleName used for research
   simpleName: string;
   setCode: string;
-  identifiers: {
-    // scryfallId for image
-    scryfallId: string;
-  };
-  // todo
 }
 
 export interface CardImage {
-  scryfallId: string;
+  uuid: string;
   normal: ArrayBuffer;
   // todo
 }
