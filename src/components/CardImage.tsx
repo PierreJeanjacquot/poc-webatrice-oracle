@@ -17,7 +17,7 @@ function CardImage(props: CardImageProps): JSX.Element {
   const { cardInfo } = props;
   const { getImage } = useContext(ImageContext);
   useEffect(() => {
-    (async function() {
+    (async function () {
       setSrc("");
       const imgSrc = await getImage(cardInfo.uuid);
       if (imgSrc && isMounted.current) {

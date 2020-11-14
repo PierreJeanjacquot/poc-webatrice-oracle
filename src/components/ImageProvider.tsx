@@ -1,9 +1,8 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useEffect } from "react";
 import * as images from "../services/images";
 
 export type ImageContextType = {
   getImage: (uuid: string) => Promise<string | undefined>;
-  imageCount: number;
 };
 
 export const ImageContext = React.createContext<ImageContextType>(
@@ -24,37 +23,22 @@ function ImageProvider(props: ProviderProps) {
     };
   }, []);
 
-  const [imageCount, setImageCount] = useState(0);
-
-  useEffect(() => {
-    images
-      .countImages()
-      .then(newImageCount => {
-        if (isMounted.current) {
-          setImageCount(newImageCount);
-        }
-      })
-      .catch(e => console.log("failed to update imageCount", e));
-  });
-
   async function getImage(uuid: string): Promise<string | undefined> {
     try {
       const fromDB = await images.getCardImage(uuid);
       if (fromDB) return fromDB;
       if (fetchPromises.get(uuid) === undefined) {
         console.log("new fetch Promise");
-        fetchPromises.set(uuid, images.fetchImage(uuid));
+        fetchPromises.set(
+          uuid,
+          images
+            .fetchImage(uuid)
+            .catch((e) => {
+              console.log(`failed to fetch image ${uuid}`, e);
+            })
+            .finally(() => fetchPromises.delete(uuid))
+        );
         await fetchPromises.get(uuid);
-        fetchPromises.delete(uuid);
-        // non blocking update imageCount
-        images
-          .countImages()
-          .then(newImageCount => {
-            if (isMounted.current) {
-              setImageCount(newImageCount);
-            }
-          })
-          .catch(e => console.log("failed to update imageCount", e));
       } else {
         console.log("waiting existing Promise");
         await fetchPromises.get(uuid);
@@ -67,7 +51,11 @@ function ImageProvider(props: ProviderProps) {
   }
 
   return (
-    <ImageContext.Provider value={{ getImage, imageCount }}>
+    <ImageContext.Provider
+      value={{
+        getImage,
+      }}
+    >
       {props.children}
     </ImageContext.Provider>
   );

@@ -76,7 +76,7 @@ function OracleProvider(props: ProviderProps) {
     await updateSetsInfo();
     const sets = await loadSetsInfo();
     await Promise.all(
-      sets.map(async set => {
+      sets.map(async (set) => {
         const upToDate = await checkSetIsUpToDate(set.code);
         if (!upToDate) {
           await updateSet(set.code);
@@ -120,7 +120,7 @@ function OracleProvider(props: ProviderProps) {
         loadSetsInfo,
         checkSetIsUpToDate,
         searchCards,
-        getAllCards
+        getAllCards,
       }}
     >
       {props.children}

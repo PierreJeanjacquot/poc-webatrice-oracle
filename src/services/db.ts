@@ -38,19 +38,19 @@ export async function getDB(): Promise<IDBPDatabase<OracleDB>> {
   const db = await openDB<OracleDB>(DB_NAME, DB_VERSION, {
     upgrade(db) {
       const setStore = db.createObjectStore(SET_STORE_NAME, {
-        keyPath: "code"
+        keyPath: "code",
       });
       setStore.createIndex("byName", "name");
       const cardStore = db.createObjectStore(CARD_STORE_NAME, {
-        keyPath: "uuid"
+        keyPath: "uuid",
       });
       cardStore.createIndex("byName", "name");
       cardStore.createIndex("bySimpleName", "simpleName");
       cardStore.createIndex("bySetCode", "setCode");
       db.createObjectStore(IMAGE_STORE_NAME, {
-        keyPath: "uuid"
+        keyPath: "uuid",
       });
-    }
+    },
   });
   return db;
 }
@@ -60,12 +60,12 @@ export async function insertManySets(sets: Array<SetInfo>): Promise<void> {
   const tx = db.transaction(SET_STORE_NAME, "readwrite");
   const setStore = tx.objectStore(SET_STORE_NAME);
   await Promise.all(
-    sets.map(async set => {
+    sets.map(async (set) => {
       // keep existing checksum
       const existing = await setStore.get(set.code);
       await setStore.put({
         ...set,
-        ...(!!existing && { checksum: existing.checksum })
+        ...(!!existing && { checksum: existing.checksum }),
       });
     })
   );
@@ -84,7 +84,7 @@ export async function updateSetChecksum(
   if (existing) {
     await setStore.put({
       ...existing,
-      checksum
+      checksum,
     });
     console.log(`${setCode} set checksum updated`);
   }
@@ -116,11 +116,7 @@ export async function insertManyCards(cards: Array<CardInfo>): Promise<void> {
   const db = await getDB();
   const tx = db.transaction(CARD_STORE_NAME, "readwrite");
   const cardStore = tx.objectStore(CARD_STORE_NAME);
-  await Promise.all(
-    cards.map(card =>
-      cardStore.put(card)
-    )
-  );
+  await Promise.all(cards.map((card) => cardStore.put(card)));
   await tx.done;
   console.log(`added ${cards.length} cards`);
 }
@@ -212,6 +208,16 @@ export async function searchCards(
     cursor = await cursor.continue();
   }
   return result;
+}
+
+export async function getNextCard(uuid?: string): Promise<CardInfo | null> {
+  const db = await getDB();
+  const cardStore = db
+    .transaction(CARD_STORE_NAME)
+    .objectStore(CARD_STORE_NAME);
+  const range = uuid ? IDBKeyRange.lowerBound(uuid, true) : undefined;
+  let cursor = await cardStore.openCursor(range);
+  return cursor ? cursor.value : null;
 }
 
 export async function insertImage(image: CardImage): Promise<void> {

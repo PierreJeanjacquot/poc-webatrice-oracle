@@ -1,23 +1,28 @@
 import fetch from "cross-fetch";
 import * as db from "./db";
-import * as cardUtils from "../utils/card-utils"
+import * as cardUtils from "../utils/card-utils";
 import { SetInfo, CardInfo } from "../types/stores";
 
 const ORACLE_API = "https://mtgjson.com/api/v5";
 const SETS_ENDPOINT = "/SetList.json";
 
 type MtgjsonCard = {
-   name: string;
-   setCode: string;
-   identifiers :{
-    scryfallId: string,
-    multiverseId?: string
+  name: string;
+  setCode: string;
+  identifiers: {
+    scryfallId: string;
+    multiverseId?: string;
   };
-}
+};
 
-export function formatCardForDb(card: MtgjsonCard ): CardInfo {
+export function formatCardForDb(card: MtgjsonCard): CardInfo {
   // todo complete DB format
-  return ({ ...card, simpleName: cardUtils.simplifyName(card.name), uuid: card.identifiers.scryfallId, muid: card.identifiers.multiverseId})
+  return {
+    ...card,
+    simpleName: cardUtils.simplifyName(card.name),
+    uuid: card.identifiers.scryfallId,
+    muid: card.identifiers.multiverseId,
+  };
 }
 
 export async function updateSetsInfo(): Promise<void> {
@@ -48,7 +53,7 @@ export async function checkSetIsUpToDate(setCode: string): Promise<boolean> {
     return false;
   }
   const checksumRes = await fetch(`${ORACLE_API}/${setCode}.json.sha256`).catch(
-    e => {
+    (e) => {
       console.log(`failed to fetch ${ORACLE_API}/${setCode}.json.sha256`);
       throw e;
     }
@@ -61,12 +66,12 @@ export async function checkSetIsUpToDate(setCode: string): Promise<boolean> {
 }
 
 export async function updateSet(setCode: string): Promise<void> {
-  const res = await fetch(`${ORACLE_API}/${setCode}.json`).catch(e => {
+  const res = await fetch(`${ORACLE_API}/${setCode}.json`).catch((e) => {
     console.log(`failed to fetch ${ORACLE_API}/${setCode}.json`);
     throw e;
   });
   const checksumRes = await fetch(`${ORACLE_API}/${setCode}.json.sha256`).catch(
-    e => {
+    (e) => {
       console.log(`failed to fetch ${ORACLE_API}/${setCode}.json.sha256`);
       throw e;
     }
@@ -78,9 +83,9 @@ export async function updateSet(setCode: string): Promise<void> {
     throw new Error(`bad response: ${checksumRes.status}`);
   }
   const { data } = await res.json();
-  const cards = data.cards as Array<MtgjsonCard>
+  const cards = data.cards as Array<MtgjsonCard>;
   const checksum = await checksumRes.text();
-  const formatedCards = cards.map(card => formatCardForDb(card))
+  const formatedCards = cards.map((card) => formatCardForDb(card));
   await db.insertManyCards(formatedCards);
   await db.updateSetChecksum(setCode, checksum);
 }
@@ -99,4 +104,8 @@ export async function searchCards(criterion: {
   set?: string;
 }): Promise<Array<CardInfo>> {
   return db.searchCards(criterion.name, criterion.set);
+}
+
+export async function getNextCard(uuid?: string): Promise<CardInfo | null> {
+  return db.getNextCard(uuid);
 }

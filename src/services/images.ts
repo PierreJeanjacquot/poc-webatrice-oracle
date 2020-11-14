@@ -20,9 +20,8 @@ function arrayBufferToBlob(buffer: ArrayBuffer, type: string): Blob {
 }
 
 export async function fetchImage(uuid: string): Promise<void> {
-  const res = await fetch(
-    `${IMAGE_API}${uuid}?format=image&version=normal`
-  );
+  const res = await fetch(`${IMAGE_API}${uuid}?format=image&version=normal`);
+
   if (!res.ok) {
     throw new Error(`bad response: ${res.status}`);
   }
@@ -31,14 +30,17 @@ export async function fetchImage(uuid: string): Promise<void> {
   await db.insertImage({ uuid, normal: buffer });
 }
 
-export async function getCardImage(
-  uuid: string
-): Promise<string | undefined> {
+export async function getCardImage(uuid: string): Promise<string | undefined> {
   const cardImage = await db.getImage(uuid);
   if (!cardImage) return undefined;
   const blob = arrayBufferToBlob(cardImage.normal, "image/jpeg");
   const src = URL.createObjectURL(blob);
   return src;
+}
+
+export async function imageExists(uuid: string): Promise<boolean> {
+  const cardImage = await db.getImage(uuid);
+  return !!cardImage;
 }
 
 export async function countImages(): Promise<number> {
