@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import CardImage from "./CardImage";
 import { CardInfo } from "../types/stores";
 
@@ -7,6 +7,9 @@ function CardList(
 ): JSX.Element {
   const { cards } = props;
   const [selected, setSelected] = useState(undefined as CardInfo | undefined);
+  useEffect(() => {
+    setSelected(undefined);
+  }, [cards, setSelected]);
   return (
     <div>
       <div style={{ float: "left", maxHeight: "600px", overflowY: "scroll" }}>
