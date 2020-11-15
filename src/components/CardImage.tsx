@@ -17,13 +17,24 @@ function CardImage(props: CardImageProps): JSX.Element {
   const { cardInfo } = props;
   const { getImage } = useContext(ImageContext);
   useEffect(() => {
+    let revoke = () => {};
     (async function () {
       setSrc("");
-      const imgSrc = await getImage(cardInfo.uuid);
-      if (imgSrc && isMounted.current) {
-        setSrc(imgSrc);
+      const img = await getImage(cardInfo.uuid);
+      if (img) {
+        if (isMounted.current) {
+          setSrc(img.src);
+          revoke = img.revoke;
+        } else {
+          // revoke as image won't be used
+          img.revoke();
+        }
       }
     })();
+    return () => {
+      // revoke as image to display changed
+      revoke();
+    };
   }, [cardInfo.uuid, getImage]);
   return <>{src && <img src={src} alt="card" />}</>;
 }

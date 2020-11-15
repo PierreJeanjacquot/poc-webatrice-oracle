@@ -2,7 +2,9 @@ import React, { useRef, useEffect } from "react";
 import * as images from "../services/images";
 
 export type ImageContextType = {
-  getImage: (uuid: string) => Promise<string | undefined>;
+  getImage: (
+    uuid: string
+  ) => Promise<{ src: string; revoke: () => void } | null>;
 };
 
 export const ImageContext = React.createContext<ImageContextType>(
@@ -23,7 +25,13 @@ function ImageProvider(props: ProviderProps) {
     };
   }, []);
 
-  async function getImage(uuid: string): Promise<string | undefined> {
+  /**
+   * Returns a promise of an object containing image src and revoke() function if the image exists in the DB otherwise returns null.
+   * revoke() must be called when the image is no longer needed.
+   */
+  async function getImage(
+    uuid: string
+  ): Promise<{ src: string; revoke: () => void } | null> {
     try {
       const fromDB = await images.getCardImage(uuid);
       if (fromDB) return fromDB;
@@ -46,7 +54,7 @@ function ImageProvider(props: ProviderProps) {
       const fetched = await images.getCardImage(uuid);
       return fetched;
     } catch (e) {
-      return undefined;
+      return null;
     }
   }
 

@@ -30,12 +30,19 @@ export async function fetchImage(uuid: string): Promise<void> {
   await db.insertImage({ uuid, normal: buffer });
 }
 
-export async function getCardImage(uuid: string): Promise<string | undefined> {
+export async function getCardImage(
+  uuid: string
+): Promise<{ src: string; revoke: () => void } | null> {
   const cardImage = await db.getImage(uuid);
-  if (!cardImage) return undefined;
+  if (!cardImage) return null;
   const blob = arrayBufferToBlob(cardImage.normal, "image/jpeg");
   const src = URL.createObjectURL(blob);
-  return src;
+  return {
+    src,
+    revoke: () => {
+      URL.revokeObjectURL(src);
+    },
+  };
 }
 
 export async function imageExists(uuid: string): Promise<boolean> {
