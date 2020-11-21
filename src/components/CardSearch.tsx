@@ -12,7 +12,6 @@ function CardSearch(): JSX.Element {
   }, []);
 
   const [name, setName] = useState("");
-  const [set, setSet] = useState("");
 
   const [result, setResult] = useState([] as Array<CardInfo>);
 
@@ -20,22 +19,17 @@ function CardSearch(): JSX.Element {
     (async () => {
       setResult([]);
       if (name.length >= 3) {
-        const searchResult = await searchCards({ name, set });
+        const searchResult = await searchCards({ name });
         if (isMounted.current) {
           setResult(searchResult);
         }
       }
     })();
-  }, [name, set]);
+  }, [name]);
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target) {
       setName(e.target.value);
-    }
-  };
-  const handleSetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target) {
-      setSet(e.target.value);
     }
   };
 
@@ -45,10 +39,6 @@ function CardSearch(): JSX.Element {
       <p>
         <label>Name: </label>
         <input type="text" onChange={handleNameChange} value={name} />
-      </p>
-      <p>
-        <label>Set: </label>
-        <input type="text" onChange={handleSetChange} value={set} />
       </p>
       <CardList cards={result} />
     </div>
