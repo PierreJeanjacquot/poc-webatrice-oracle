@@ -7,6 +7,7 @@ const storageApiAvailabe =
 function StorageStatus(): JSX.Element {
   const [idbEnabled, setIdbEnabled] = useState(false);
   const [persistent, setPersistent] = useState(false);
+  const [requestRejected, setRequestRejected] = useState(false);
   const [storageUsage, setStorageUsage] = useState(0);
   const [storageQuota, setStorageQuota] = useState(0);
 
@@ -46,20 +47,46 @@ function StorageStatus(): JSX.Element {
       const persisted = await navigator.storage.persist();
       console.log("persisted", persisted);
       setPersistent(persisted);
+      if (persisted) {
+        setRequestRejected(false);
+      } else {
+        setRequestRejected(true);
+      }
     }
   };
 
   return (
     <div>
       <h2>Storage Status:</h2>
-      {!storageApiAvailabe && <p>navigator.storage not availabe</p>}
-      {!idbEnabled && <p>DB disabled</p>}
-      {!persistent && <p>Data not persisted</p>}
+      {!storageApiAvailabe && (
+        <p style={{ fontWeight: "bold", color: "red" }}>
+          navigator.storage not availabe
+        </p>
+      )}
+      {!idbEnabled && (
+        <p style={{ fontWeight: "bold", color: "red" }}>DB disabled</p>
+      )}
+      {!persistent ? (
+        <p style={{ fontWeight: "bold", color: "orange" }}>
+          Persistent storage not granted (navigator may prune data)
+        </p>
+      ) : (
+        <p style={{ fontWeight: "bold", color: "green" }}>
+          Persistent storage granted
+        </p>
+      )}
       <p>
         Storage usage: {storagePercent}%{" "}
         <button onClick={estimateStorage}>Refresh</button>
       </p>
-      <button onClick={requestPersist}>Request persistent storage</button>
+      {!persistent && (
+        <button onClick={requestPersist}>Request persistent storage</button>
+      )}
+      {requestRejected && (
+        <p>
+          access to persistent storage refused (bookmark this app and try again)
+        </p>
+      )}
     </div>
   );
 }
