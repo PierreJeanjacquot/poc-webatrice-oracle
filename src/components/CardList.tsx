@@ -11,8 +11,8 @@ function CardList(
     setSelected(undefined);
   }, [cards, setSelected]);
   return (
-    <div>
-      <div style={{ float: "left", maxHeight: "600px", overflowY: "scroll" }}>
+    <div style={{ display: "flex", flexDirection: "row" }}>
+      <div style={{ flex: 1 }}>
         {cards.map((card, i) => {
           return (
             <div
@@ -26,8 +26,10 @@ function CardList(
         })}
       </div>
       {selected && (
-        <div style={{ float: "left", maxHeight: "500px" }}>
-          <CardImage cardInfo={selected} />
+        <div style={{ flex: 1 }}>
+          <div style={{ margin: "auto" }}>
+            <CardImage cardInfo={selected} />
+          </div>
         </div>
       )}
     </div>

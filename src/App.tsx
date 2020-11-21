@@ -14,10 +14,30 @@ function App() {
       <OracleProvider>
         <ImageFetcherProvider>
           <ImageProvider>
-            <StorageStatus />
-            <OracleStatus />
-            <ImageStoreStatus />
-            <CardSearch />
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                margin: "0 2rem",
+              }}
+            >
+              <div style={{ flex: 1 }}>
+                <StorageStatus />
+              </div>
+              <div style={{ flex: 1 }}>
+                <OracleStatus />
+              </div>
+              <div style={{ flex: 1 }}>
+                <ImageStoreStatus />
+              </div>
+            </div>
+            <div
+              style={{
+                margin: "2rem",
+              }}
+            >
+              <CardSearch />
+            </div>
           </ImageProvider>
         </ImageFetcherProvider>
       </OracleProvider>
