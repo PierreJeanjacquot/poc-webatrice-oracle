@@ -20,8 +20,6 @@ interface Props {
 
 let lastCardFetchedUuid = undefined as string | undefined;
 
-const fetchPromises = new Map() as Map<string, Promise<void>>;
-
 function ImageFetcherProvider(props: Props) {
   const isMounted = useRef(true);
   useEffect(() => {
@@ -63,7 +61,7 @@ function ImageFetcherProvider(props: Props) {
             } else {
               const exists = await images.imageExists(cardInfo.uuid);
               if (!exists) {
-                fetchPromises.set(
+                images.fetchPromises.set(
                   cardInfo.uuid,
                   images
                     .fetchImage(cardInfo.uuid)
@@ -71,7 +69,7 @@ function ImageFetcherProvider(props: Props) {
                       console.log(`failed to fetch image ${cardInfo.uuid}`, e);
                     })
                     .finally(() => {
-                      fetchPromises.delete(cardInfo.uuid);
+                      images.fetchPromises.delete(cardInfo.uuid);
                       images
                         .countImages()
                         .then((newImageCount) => {
@@ -84,7 +82,7 @@ function ImageFetcherProvider(props: Props) {
                         );
                     })
                 );
-                console.log("fetchPromises", fetchPromises.size);
+                console.log("fetchPromises", images.fetchPromises.size);
                 await sleep(125);
               }
               lastCardFetchedUuid = cardInfo.uuid;

@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import * as oracle from "../services/oracle";
-import { SetInfo, CardInfo } from "../types/stores";
+import { SetInfo } from "../types/stores";
 
 export type OracleContextType = {
   isUpdating: boolean;
@@ -10,11 +10,6 @@ export type OracleContextType = {
   loadSetsInfo: () => Promise<Array<SetInfo>>;
   checkSetIsUpToDate: (setCode: string) => Promise<boolean>;
   updateSet: (setCode: string) => Promise<void>;
-  searchCards: (criterion: {
-    name: string;
-    set?: string;
-  }) => Promise<Array<CardInfo>>;
-  getAllCards: () => Promise<Array<CardInfo>>;
 };
 
 export const OracleContext = React.createContext<OracleContextType>(
@@ -98,17 +93,6 @@ function OracleProvider(props: ProviderProps) {
     return oracle.checkSetIsUpToDate(setCode);
   }
 
-  async function searchCards(criterion: {
-    name: string;
-    set?: string;
-  }): Promise<Array<CardInfo>> {
-    return oracle.searchCards(criterion);
-  }
-
-  async function getAllCards(): Promise<Array<CardInfo>> {
-    return oracle.getAllCards();
-  }
-
   return (
     <OracleContext.Provider
       value={{
@@ -119,8 +103,6 @@ function OracleProvider(props: ProviderProps) {
         updateSet,
         loadSetsInfo,
         checkSetIsUpToDate,
-        searchCards,
-        getAllCards,
       }}
     >
       {props.children}

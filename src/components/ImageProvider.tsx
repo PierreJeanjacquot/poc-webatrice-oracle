@@ -15,8 +15,6 @@ interface ProviderProps {
   children?: any;
 }
 
-const fetchPromises = new Map() as Map<string, Promise<void>>;
-
 function ImageProvider(props: ProviderProps) {
   const isMounted = useRef(true);
   useEffect(() => {
@@ -35,21 +33,21 @@ function ImageProvider(props: ProviderProps) {
     try {
       const fromDB = await images.getCardImage(uuid);
       if (fromDB) return fromDB;
-      if (fetchPromises.get(uuid) === undefined) {
+      if (images.fetchPromises.get(uuid) === undefined) {
         console.log("new fetch Promise");
-        fetchPromises.set(
+        images.fetchPromises.set(
           uuid,
           images
             .fetchImage(uuid)
             .catch((e) => {
               console.log(`failed to fetch image ${uuid}`, e);
             })
-            .finally(() => fetchPromises.delete(uuid))
+            .finally(() => images.fetchPromises.delete(uuid))
         );
-        await fetchPromises.get(uuid);
+        await images.fetchPromises.get(uuid);
       } else {
         console.log("waiting existing Promise");
-        await fetchPromises.get(uuid);
+        await images.fetchPromises.get(uuid);
       }
       const fetched = await images.getCardImage(uuid);
       return fetched;

@@ -3,6 +3,8 @@ import * as db from "./db";
 
 const IMAGE_API = "https://api.scryfall.com/cards/";
 
+export const fetchPromises = new Map() as Map<string, Promise<void>>;
+
 function blobToArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();

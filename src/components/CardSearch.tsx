@@ -1,7 +1,7 @@
-import React, { useRef, useContext, useEffect, useState } from "react";
-import { OracleContext } from "./OracleProvider";
+import React, { useRef, useEffect, useState } from "react";
 import CardList from "./CardList";
 import { CardInfo } from "../types/stores";
+import { searchCards } from "../services/oracle";
 
 function CardSearch(): JSX.Element {
   const isMounted = useRef(true);
@@ -13,7 +13,6 @@ function CardSearch(): JSX.Element {
 
   const [name, setName] = useState("");
   const [set, setSet] = useState("");
-  const { searchCards } = useContext(OracleContext);
 
   const [result, setResult] = useState([] as Array<CardInfo>);
 
@@ -27,7 +26,7 @@ function CardSearch(): JSX.Element {
         }
       }
     })();
-  }, [name, set, searchCards]);
+  }, [name, set]);
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target) {
