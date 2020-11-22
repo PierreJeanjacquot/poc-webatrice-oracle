@@ -71,12 +71,13 @@ function OracleProvider(props: ProviderProps) {
     await updateSetsInfo();
     const sets = await loadSetsInfo();
     await Promise.all(
-      sets.map(async (set) => {
-        const upToDate = await checkSetIsUpToDate(set.code);
-        if (!upToDate) {
-          await updateSet(set.code);
-        }
-      })
+      sets.map((set) =>
+        checkSetIsUpToDate(set.code).then((upToDate) => {
+          if (!upToDate) {
+            return updateSet(set.code);
+          }
+        })
+      )
     );
     const newCardCount = await oracle.countCards();
     if (isMounted.current) {

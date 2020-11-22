@@ -60,14 +60,15 @@ export async function insertManySets(sets: Array<SetInfo>): Promise<void> {
   const tx = db.transaction(SET_STORE_NAME, "readwrite");
   const setStore = tx.objectStore(SET_STORE_NAME);
   await Promise.all(
-    sets.map(async (set) => {
-      // keep existing checksum
-      const existing = await setStore.get(set.code);
-      await setStore.put({
-        ...set,
-        ...(!!existing && { checksum: existing.checksum }),
-      });
-    })
+    sets.map((set) =>
+      setStore.get(set.code).then((existing) =>
+        // keep existing checksum
+        setStore.put({
+          ...set,
+          ...(!!existing && { checksum: existing.checksum }),
+        })
+      )
+    )
   );
   await tx.done;
   console.log(`added ${sets.length} sets info`);
